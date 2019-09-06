@@ -1,4 +1,5 @@
 
 LICENSE1
-*.gitattributes
-*.DS_Store
+.gitattributes
+.DS_Store
+.gitignore
