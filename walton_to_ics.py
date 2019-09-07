@@ -18,7 +18,7 @@ def get_date(partial_date):
     """
     month, day = partial_date.split()[1].split('/')
     year = 2020 if int(month) < 9 else 2019
-    dt = datetime.datetime(int(year), int(month), int(day), hour=14,
+    dt = datetime.datetime(int(year), int(month), int(day), hour=21,
                            minute=20)
     return dt
 
@@ -52,14 +52,14 @@ def get_events_from_study_guide(filename):
 
     # slice df only where df['Due'] is not empty, then save to_dict,
     # orient='records' to create a separate dict with all keys for each event
-    assignments = df[df['Due Date'].apply(is_empty)].to_dict(orient='records')
+    assignments = df[df['Due'].apply(is_empty)].to_dict(orient='records')
 
     events = []
     for hw in assignments:
         title = 'Section ' + hw['Section']
-        desc = hw['Topic'].replace('\n', '') + '\nProblems: ' \
+        desc = hw['Topic'].replace('\n', '') + ' --- Problems: ' \
                + hw['Exercises'].replace('\n', '')
-        date = get_date(hw['Due Date'])
+        date = get_date(hw['Due'])
 
         event = {
             "title": title,
@@ -113,8 +113,8 @@ def create_ical(events_dict):
     return iCal
 
 
-events = get_events_from_study_guide("/Users/Sam/Documents/Shalhevet/2019-2020/Precalculus/APC_Ch10_D_Block_1819.pdf")
+events = get_events_from_study_guide("/Users/Sam/Coding/Random Projects/AB_Calc_Ch02_I_Block_1920.pdf")
 
 cal = create_ical(events)
-with open('112course_schedule.ics', 'w') as f:
+with open('course_schedule.ics', 'w') as f:
     f.writelines(cal)
