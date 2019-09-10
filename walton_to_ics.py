@@ -1,23 +1,23 @@
 import datetime
-import webbrowser as wb
+import subprocess
+from tkinter import Tk
+from tkinter.filedialog import askopenfilename
 
 import camelot
+import numpy as np
 from ics import Calendar, Event
 
-import numpy as np
-import ruamel.yaml
-import schoolopy
-from pyaml import pprint
 
-
-def get_date(partial_date):
+def get_assignment_datetime(partial_date):
     """
     Creates datetime object from weekday + month and day string, e.g. Tue
     9/4 turns into datetime(2019/2020, 9, 4, 14, 20) -- ignores the weekday
-    ("Tue") in the string. Calc class is always at 14:20:00.
+    ("Tue") in the string. Calc class is always at 21:20:00, which is 2:20 pm.
     """
     month, day = partial_date.split()[1].split('/')
     year = 2020 if int(month) < 9 else 2019
+
+    # supposedly, for whatever weird reason, hour=21 is 2:00 pm
     dt = datetime.datetime(int(year), int(month), int(day), hour=21,
                            minute=20)
     return dt
@@ -52,14 +52,15 @@ def get_events_from_study_guide(filename):
 
     # slice df only where df['Due'] is not empty, then save to_dict,
     # orient='records' to create a separate dict with all keys for each event
-    assignments = df[df['Due'].apply(is_empty)].to_dict(orient='records')
+    due_column = 'Due Date' if 'Due Date' in df.columns else 'Due'
+    assignments = df[df[due_column].apply(is_empty)].to_dict(orient='records')
 
     events = []
     for hw in assignments:
         title = 'Section ' + hw['Section']
         desc = hw['Topic'].replace('\n', '') + ' --- Problems: ' \
                + hw['Exercises'].replace('\n', '')
-        date = get_date(hw['Due'])
+        date = get_assignment_datetime(hw[due_column])
 
         event = {
             "title": title,
@@ -109,12 +110,37 @@ def create_ical(events_dict):
         e.description = event['description']
         e.begin = event['begin']
         iCal.events.add(e)
+        print('\ne:', e)
 
     return iCal
 
 
-events = get_events_from_study_guide("/Users/Sam/Coding/Random Projects/AB_Calc_Ch02_I_Block_1920.pdf")
+def save_and_show(calendar):
+    """Saves calendar .ics file and opens file explorer / finder to the file."""
 
-cal = create_ical(events)
-with open('course_schedule.ics', 'w') as f:
-    f.writelines(cal)
+    output_filepath = f'{filepath.replace(".pdf", "")}.ics'
+    with open(output_filepath, 'w') as f:
+        f.writelines(calendar)
+
+    print('.ics file saved at:', output_filepath)
+    print('Opening in Finder...')
+
+    from sys import platform
+    if platform == "darwin":
+        subprocess.call(["open", "-R", output_filepath])  # OS X
+    elif platform == "win32":
+        # Windows...
+        subprocess.call(f'explorer /select,"{output_filepath}"')
+
+
+if __name__ == '__main__':
+
+    Tk().withdraw()  # don't want a full GUI, so keep root window from appearing
+    get_filepath = askopenfilename
+    filepath = askopenfilename(filetypes=[("Walton's PDFs", "*.pdf")])  # only PDFs
+
+    events = get_events_from_study_guide(filepath)
+    cal = create_ical(events)
+    print('\n\n\ncal:', cal)
+
+    save_and_show(cal)
