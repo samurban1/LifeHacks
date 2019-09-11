@@ -18,7 +18,7 @@ def get_assignment_datetime(partial_date):
     year = 2020 if int(month) < 9 else 2019
 
     # supposedly, for whatever weird reason, hour=21 is 2:00 pm
-    dt = datetime.datetime(int(year), int(month), int(day), hour=21,
+    dt = datetime.datetime(int(year), int(month), int(day), hour=14,
                            minute=20)
     return dt
 
@@ -52,7 +52,6 @@ def get_events_from_study_guide(filename):
 
     # slice df only where df['Due'] is not empty, then save to_dict,
     # orient='records' to create a separate dict with all keys for each event
-    due_column = 'Due Date' if 'Due Date' in df.columns else 'Due'
     assignments = df[df[due_column].apply(is_empty)].to_dict(orient='records')
 
     events = []
