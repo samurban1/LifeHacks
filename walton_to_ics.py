@@ -50,7 +50,9 @@ def get_events_from_study_guide(filename):
 
     df = get_df_from_pdf(filename)
 
-    # slice df only where df['Due'] is not empty, then save to_dict,
+    due_column = df.columns[-1]  # Usually "Due" or "Due Date"
+
+    # slice df only where df[due_column] is not empty, then save to_dict,
     # orient='records' to create a separate dict with all keys for each event
     assignments = df[df[due_column].apply(is_empty)].to_dict(orient='records')
 
